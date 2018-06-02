@@ -9,8 +9,9 @@
         <item>Наука</item>
         <item>Политика</item>
         <item>Музыка</item>
+        <item>Рандомный тег</item>
         <item>Свой тег</item>
-    </string-array>>
+    </string-array>
 
     <string-array name="date">
         <item>За всё время</item>

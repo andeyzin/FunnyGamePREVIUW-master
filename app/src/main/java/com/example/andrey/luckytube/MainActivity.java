@@ -1,21 +1,15 @@
 package com.example.andrey.luckytube;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.view.animation.Animation;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.google.android.youtube.player.YouTubeBaseActivity;
@@ -24,13 +18,11 @@ import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerView;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-//наследуемся от YouTubeBaseActivity для реализации плеера
 public class MainActivity extends YouTubeBaseActivity{
 
     final static String apiKey = "AIzaSyBtR6GsaU4fUKAI4tZuLJfljOD8fIiF0S8";
@@ -43,9 +35,15 @@ public class MainActivity extends YouTubeBaseActivity{
 
     public static YouTubePlayerView player;
 
+    public static Resources res;
     public static List<VideoMyClass> videoMyClass;
     public static RVAdapter adapter;
     public static RecyclerView rv;
+
+    public static final String mPath = "base.txt";
+    public static final String musicPath = "music_base.txt";
+    private static TagBase mTagBase;
+    private static List<String> mLines;
 
     public boolean isFirstStart;
 
@@ -74,6 +72,7 @@ public class MainActivity extends YouTubeBaseActivity{
 
         player = (YouTubePlayerView)findViewById(R.id.player);
 
+        res = getResources();
         context = this;
 
         rv = (RecyclerView)findViewById(R.id.rv);
@@ -86,7 +85,7 @@ public class MainActivity extends YouTubeBaseActivity{
         initializeData();
         initializeAdapter();
 
-        Machine task = new Machine();
+        task = new Machine();
         task.execute("startVideo", videoId, "any");
     }
 
@@ -158,6 +157,7 @@ public class MainActivity extends YouTubeBaseActivity{
 
     public static String getTag(){
         String stringTag;
+        Random r = new Random();
         switch (RVAdapter.tags.getSelectedItem().toString()){
             case  "Свой тег":
                 if (!RVAdapter.myTag.getText().toString().isEmpty()){
@@ -167,7 +167,6 @@ public class MainActivity extends YouTubeBaseActivity{
                 Toast.makeText(context, "Пожалуйста введите тег", Toast.LENGTH_SHORT).show();
 
             case "Без тега":
-                Random r = new Random();
                 String seq = "abcdefghijklmnopqrstuvwxyz0123456789-_";
                 String randSeq = "";
                 for (int i = 0; i <= 3; i++) {
@@ -175,6 +174,17 @@ public class MainActivity extends YouTubeBaseActivity{
                     randSeq += seq.charAt(r.nextInt(seq.length()));
                 }
                 stringTag = randSeq;
+                break;
+            case "Рандомный тег":
+                mTagBase = new TagBase(context);
+                mLines = mTagBase.readLine(mPath);
+                stringTag = mLines.get(r.nextInt(mLines.size()));
+                break;
+
+            case "Музыка":
+                mTagBase = new TagBase(context);
+                mLines = mTagBase.readLine(musicPath);
+                stringTag = mLines.get(r.nextInt(mLines.size()));
                 break;
 
             default:
@@ -206,10 +216,12 @@ public class MainActivity extends YouTubeBaseActivity{
         initializeAdapter();
         player.initialize(apiKey, new YouTubePlayer.OnInitializedListener() {
             @Override
-            public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) { if (!b) {
+            public void onInitializationSuccess(YouTubePlayer.Provider provider, final YouTubePlayer youTubePlayer, boolean b) { if (!b) {
                 try {
                     youTubePlayer.loadVideo(videoId);
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                    System.out.print(e.getMessage());
+                }
             }}
 
             @Override
